@@ -21,45 +21,40 @@ type Option struct {
 	Arc  string `json:"arc"`
 }
 
-type StoryParams struct {
-	story   Story
-	arcName string
-}
-
-type StoryOption func(*StoryParams)
-
 /****************************/
 // functional options
-func NewStory(s Story, options ...StoryOption) StoryParams {
-	sp := StoryParams{
-		story:   s,
-		arcName: "intro",
-	}
 
-	for _, opt := range options {
-		opt(&sp)
-	}
-	return sp
+type StoryParams struct {
+	Story   Story
+	ArcName string
 }
 
-func WithFirstArc(arc string) StoryOption {
-	return func(sp *StoryParams) {
-		sp.arcName = arc
+type OptionFunc func(sp *StoryParams)
+
+func NewStory(s Story, options ...OptionFunc) *StoryParams {
+	sp := &StoryParams{
+		Story:   s,
+		ArcName: "intro",
 	}
+
+	for _, option := range options {
+		option(sp)
+	}
+	return sp
 }
 
 /****************************/
 
 func PlayStory(s StoryParams) error {
 	for {
-		value := s.story[s.arcName]
-		if len(value.Options) > 0 {
+		value := s.Story[s.ArcName]
+		if len(value.Options) <= 0 {
 			fmt.Printf("Congratulations! You end this story")
 			break
 		}
 
 		//Title output
-		fmt.Printf("\n%s\n\n", strings.ToUpper(s.arcName))
+		fmt.Printf("\n%s\n\n", strings.ToUpper(s.ArcName))
 		fmt.Println(value.Title)
 
 		// Paragraphs output
@@ -74,12 +69,12 @@ func PlayStory(s StoryParams) error {
 			fmt.Printf("(Print '%s' to choose this variant)\n\n", val.Arc)
 		}
 		// Requesting for the answer
-		TypingAnswer(&s, value)
+		typingAnswer(&s, value)
 	}
 	return nil
 }
 
-func TypingAnswer(s *StoryParams, value Chapter) {
+func typingAnswer(s *StoryParams, value Chapter) {
 	for {
 		var answer string
 		fmt.Printf("I want to choose ")
@@ -88,7 +83,7 @@ func TypingAnswer(s *StoryParams, value Chapter) {
 
 		for _, val := range value.Options {
 			if val.Arc == answer {
-				s.arcName = answer
+				s.ArcName = answer
 				return
 			}
 		}
